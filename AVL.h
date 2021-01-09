@@ -13,7 +13,7 @@ public:
     AVLNode<Value>* right_son;
     AVLNode<Value>* left_son;
     int height;
-    int members_num;
+    int rank;
 
     AVLNode(Value* val_ptr): val_ptr(val_ptr),
                              right_son(nullptr),
@@ -68,6 +68,7 @@ public:
 
     void Remove(const Value& val);
     AVLNode<Value>* FindValue(const Value& val);
+    AVLNode<Value>* FindValueByIndex(int index);
 
 private:
 
@@ -75,12 +76,14 @@ private:
     final_index);
     void DestroyTree(AVLNode<Value>* root);
     AVLNode<Value>* FindValueInNode(const Value& val, AVLNode<Value>* node);
+    AVLNode<Value>* FindValueByIndexInNode(int index, AVLNode<Value>* node);
     AVLNode<Value>* InsertValueInNode(Value* val_ptr, AVLNode<Value>* node);
     AVLNode<Value>* RemoveValueInNode(const Value& val, AVLNode<Value>* node,
                                       bool delete_node = true);
     void UpdateHeight(AVLNode<Value>* node);
     AVLNode<Value>* BalanceNode(AVLNode<Value>* node);
     int CalcBalanceFactor(AVLNode<Value>* node);
+    void UpdateRank(AVLNode<Value>* node);
 
     AVLNode<Value>* LLRotate(AVLNode<Value>* node);
     AVLNode<Value>* LRRotate(AVLNode<Value>* node);
@@ -110,6 +113,11 @@ void AVLTree<Value>::Remove(const Value& val) {
 template<class Value>
 AVLNode<Value>* AVLTree<Value>::FindValue(const Value& val) {
     return FindValueInNode(val, this -> root);
+}
+
+template<class Value>
+AVLNode<Value>* AVLTree<Value>::FindValueByIndex(int index) {
+    return FindValueByIndexInNode(index, this -> root);
 }
 
 template<class Value>
@@ -334,6 +342,7 @@ void AVLTree<Value>::UpdateHeight(AVLNode<Value>* node) {
     node -> height = std::max(left_height, right_height) + 1;
 }
 
+template<class Value>
 void AVLTree<Value>::UpdateRank(AVLNode<Value>* node) {
 
     if(node == nullptr) return;
