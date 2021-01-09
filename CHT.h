@@ -34,12 +34,11 @@ public:
     CHT(bool enable_members_delete);
     ~CHT();
 
-    void insert(*Value val_ptr, int key);
-    *Value returnValuePtr(const Value& val, int key);
-    void deleteValuePtr(const Value& val, int key);
+    void insert(*Value val_ptr);
+    *Value returnValuePtr(const Value& val);
+    void deleteValuePtr(const Value& val);
 
-    void increaseTable();
-    void decreaseTable();
+    void changeTableSize(bool increase);
 
 };
 
@@ -80,9 +79,9 @@ CHT::~CHT(){
 }
 
 template<class Value>
-void CHT::insert(*Value val_ptr, int key){
+void CHT::insert(*Value val_ptr){
 
-    int calc_index = key % this -> table_size;
+    int calc_index = (val_ptr -> calc_key()) % this -> table_size;
 
     LSValue* new_ls_val = new LSValue;
     new_ls_val -> val_ptr = val_ptr;
@@ -111,14 +110,14 @@ void CHT::insert(*Value val_ptr, int key){
 
     this -> num_of_members += 1;
     if(((this -> num_of_members)/(this -> table_size)) > LOAD_FACTOR_INCREASE){
-        this -> increaseTable();
+        this -> changeTableSize(true);
     }
 
 }
 
-*Value CHT::returnValuePtr(const Value& val, int key){
+*Value CHT::returnValuePtr(const Value& val){
 
-    int calc_index = key % this -> table_size;
+    int calc_index = (val_ptr -> calc_key()) % this -> table_size;
 
     if(this -> trees_array[calc_index] == nullptr){
         throw std::invalid_argument("NOT_EXISTS");
@@ -138,9 +137,9 @@ void CHT::insert(*Value val_ptr, int key){
 
 }
 
-void CHT::deleteValuePtr(const Value& val, int key){
+void CHT::deleteValuePtr(const Value& val){
 
-    int calc_index = key % this -> table_size;
+    int calc_index = (val_ptr -> calc_key()) % this -> table_size;
 
     if(this -> trees_array[calc_index] == nullptr){
         throw std::invalid_argument("NOT_EXISTS");
@@ -177,39 +176,42 @@ void CHT::deleteValuePtr(const Value& val, int key){
 
     this -> num_of_members -= 1;
     if(((this -> num_of_members)/(this -> table_size)) < LOAD_FACTOR_DECREASE){
-        this -> decreaseTable();
+        this -> changeTableSize(false);
     }
 }
 
-void CHT::increaseTable(){
+void CHT::changeTableSize(bool increase){
 
-    int new_size = (this -> table_size)*INCREASE_FACTOR;
-    LSValue** new_ls_table = new LSValue*[new_size];
+    if(increase || ((this -> table_size/INCREASE_FACTOR) > INIT_TABLE_SIZE)) {
 
-    for (int i = 0; i < new_size; ++i) {
-        new_ls_table[i] = nullptr;
-    }
+        int old_size = this->table_size;
+        LSValue **old_ls_table = this->ls_table;
 
-    for (int i = 0; i < this -> table_size; ++i) {
-        if(this -> ls_table[i] != nullptr){
-            LSValue* current_val = this -> ls_table[i];
-            while(current_val -> next != nullptr){
-
-            }
-            if(*(current_val -> val_ptr) == val){
-                if(current_val -> prev != nullptr){
-                    current_val -> prev -> next = current_val -> next;
-                }else{
-                    this -> trees_array[calc_index] = current_val -> next;
-                }
-                if(this -> enable_members_delete){
-                    delete current_val -> val_ptr;
-                }
-                delete current_val;
-                break;
-            }
-            throw std::invalid_argument("NOT_EXISTS");
+        if (increae) {
+            this->table_size = old_size * INCREASE_FACTOR;
+            this->ls_table = new LSValue *[this->table_size];
+        } else {
+            this->table_size = old_size / INCREASE_FACTOR;
+            this->ls_table = new LSValue *[this->table_size];
         }
+
+        for (int i = 0; i < this->table_size; ++i) {
+            this->ls_table[i] = nullptr;
+        }
+
+        for (int i = 0; i < old_size; ++i) {
+            if (old_ls_table[i] != nullptr) {
+                LSValue *current_val = old_ls_table[i];
+                while (current_val != nullptr) {
+                    this->insert(current_val->val_ptr);
+                    LSValue *temp = current_val;
+                    current_val = current_val->next;
+                    delete temp;
+                }
+            }
+        }
+
+        delete[] old_ls_table;
     }
 
 }
