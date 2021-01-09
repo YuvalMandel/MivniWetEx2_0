@@ -23,15 +23,15 @@ std::string printAVLNode(AVLNode<Value>* avl_node,
         1);
         std::string left_print = printAVLNode(avl_node -> left_son, layer + 1);
         return "layer: " + std::to_string(layer) +
-        " value: " + std::to_string (*(avl_node -> val_ptr))
-        + "\n" + " rank: " + std::to_string (avl_node -> rank) +"\n" + "left " +
+        " value: " + std::to_string (*(avl_node -> val_ptr)) + " rank: " +
+        std::to_string (avl_node -> rank) +"\n" + "left " +
         left_print + "right " + right_print;
     }
 
     return "NULL\n";
 }
 
-int main1(){
+int main(){
 
 	//Specific Cases
 
@@ -395,7 +395,10 @@ int main1(){
     tree19.Insert(vals + 6);
     tree19.Remove(21);
     std::cout << "tree19\n" << printAVLNode(tree19.root, 0);
-
+    for (int i = 0; i < 11; ++i) {
+        std::cout << *((tree19.FindValueByIndex(1 + i)) -> val_ptr) << " ";
+    }
+    std::cout << "\n";
 	//double rotations LR and LL case 16
     AVLTree<int> tree20;
 	/*correct output

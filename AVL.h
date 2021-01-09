@@ -18,7 +18,8 @@ public:
     AVLNode(Value* val_ptr): val_ptr(val_ptr),
                              right_son(nullptr),
                              left_son(nullptr),
-                             height(1){};
+                             height(1),
+                             rank(1){};
 
     ~AVLNode();
     AVLNode(const AVLNode& stc);
@@ -39,6 +40,7 @@ AVLNode<Value>::AVLNode(const AVLNode& avl_node){
     this->right_son = avl_node.right_son;
     this->left_son = avl_node.left_son;
     this->height = avl_node.height;
+    this->rank = avl_node.rank;
 }
 
 template<class Value>
@@ -47,6 +49,7 @@ AVLNode<Value>& AVLNode<Value>::operator=(const AVLNode& avl_node) {
     this->right_son = avl_node.right_son;
     this->left_son = avl_node.left_son;
     this->height = avl_node.height;
+    this->rank = avl_node.rank;
     return *this;
 }
 template<class Value>
