@@ -13,6 +13,7 @@ public:
     AVLNode<Value>* right_son;
     AVLNode<Value>* left_son;
     int height;
+    int members_num;
 
     AVLNode(Value* val_ptr): val_ptr(val_ptr),
                              right_son(nullptr),
@@ -164,6 +165,27 @@ AVLNode<Value>* AVLTree<Value>::FindValueInNode(const Value& val, AVLNode<Value>
 }
 
 template<class Value>
+AVLNode<Value>* AVLTree<Value>::FindValueByIndexInNode(int index,
+                                                       AVLNode<Value>* node) {
+    if(node == nullptr){
+        return nullptr;
+    }
+    int left_rank = 0;
+    if(node -> left_son != nullptr){
+        left_rank = node -> left_son -> rank;
+    }
+
+    if(left_rank + 1 == index){
+        return node;
+    } else if(left_rank >= index){
+        return FindValueByIndexInNode(index, node -> left_son);
+    } else{
+        return FindValueByIndexInNode(index - left_rank - 1, node -> right_son);
+    }
+
+}
+
+template<class Value>
 AVLNode<Value>* AVLTree<Value>::InsertValueInNode(Value* val_ptr,
                                                   AVLNode<Value>* node) {
     if(node == nullptr){
@@ -216,6 +238,7 @@ AVLNode<Value>* AVLTree<Value>::InsertValueInNode(Value* val_ptr,
         }
     }
     UpdateHeight(node);
+    UpdateRank(node);
     return BalanceNode(node);
 }
 
@@ -229,11 +252,13 @@ AVLNode<Value>* AVLTree<Value>::RemoveValueInNode(const Value &val,
     else if(val < *(node -> val_ptr)){
         node -> left_son = RemoveValueInNode(val, node -> left_son, delete_node);
         UpdateHeight(node);
+        UpdateRank(node);
         return BalanceNode(node);
     }
     else if(val > *(node -> val_ptr)){
         node -> right_son = RemoveValueInNode(val, node -> right_son, delete_node);
         UpdateHeight(node);
+        UpdateRank(node);
         return BalanceNode(node);
     }else{
         if(node -> right_son == nullptr && node -> left_son == nullptr){
@@ -269,6 +294,7 @@ AVLNode<Value>* AVLTree<Value>::RemoveValueInNode(const Value &val,
             newNode_ptr -> left_son = node -> left_son;
 
             UpdateHeight(newNode_ptr);
+            UpdateRank(newNode_ptr);
 
             AVLNode<Value> *temp = BalanceNode(newNode_ptr);
 
@@ -306,6 +332,28 @@ void AVLTree<Value>::UpdateHeight(AVLNode<Value>* node) {
     }
 
     node -> height = std::max(left_height, right_height) + 1;
+}
+
+void AVLTree<Value>::UpdateRank(AVLNode<Value>* node) {
+
+    if(node == nullptr) return;
+
+    int left_rank;
+    int right_rank;
+
+    if(node -> left_son != nullptr) {
+        left_rank = node -> left_son -> rank;
+    }else{
+        left_rank = 0;
+    }
+
+    if(node -> right_son != nullptr) {
+        right_rank = node -> right_son -> rank;
+    }else{
+        right_rank = 0;
+    }
+
+    node -> rank = left_rank + right_rank + 1;
 }
 
 template<class Value>
@@ -348,20 +396,24 @@ AVLNode<Value>* AVLTree<Value>::BalanceNode(AVLNode<Value> *node) {
 template<class Value>
 AVLNode<Value>* AVLTree<Value>::LLRotate(AVLNode<Value> *node) {
     AVLNode<Value> *temp = node ->left_son;
-    node ->left_son = temp -> right_son;
+    node -> left_son = temp -> right_son;
     temp -> right_son = node;
     UpdateHeight(node);
+    UpdateRank(node);
     UpdateHeight(temp);
+    UpdateRank(temp);
     return temp;
 }
 
 template<class Value>
 AVLNode<Value>* AVLTree<Value>::RRRotate(AVLNode<Value> *node) {
     AVLNode<Value> *temp = node ->right_son;
-    node ->right_son = temp -> left_son;
+    node -> right_son = temp -> left_son;
     temp -> left_son = node;
     UpdateHeight(node);
+    UpdateRank(node);
     UpdateHeight(temp);
+    UpdateRank(temp);
     return temp;
 }
 
@@ -370,6 +422,7 @@ AVLNode<Value>* AVLTree<Value>::LRRotate(AVLNode<Value> *node) {
     AVLNode<Value> *temp = node ->left_son;
     node -> left_son = RRRotate(temp);
     UpdateHeight(node);
+    UpdateRank(node);
     return LLRotate(node);
 }
 
@@ -378,6 +431,7 @@ AVLNode<Value>* AVLTree<Value>::RLRotate(AVLNode<Value> *node) {
     AVLNode<Value> *temp = node ->right_son;
     node -> right_son = LLRotate(temp);
     UpdateHeight(node);
+    UpdateRank(node);
     return RRRotate(node);
 }
 
