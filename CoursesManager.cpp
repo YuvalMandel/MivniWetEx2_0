@@ -4,10 +4,6 @@
 #include "CoursesManager.h"
 
 
-int timeTree_search(int numOfClasses, int *courses, int *classes, TimeTree* tt_ptr );
-int stc_inorder(int numOfClasses, int *courses, int *classes, AVLNode<SubTreeCourse> *stc_node);
-int lectures_inorder(int numOfClasses, int *courses, int *classes, AVLNode<Lecture> *lecture_node);
-
 void CoursesManager::AddCourse (int courseID, int numOfClasses) {
 
     Course* c_ptr = new Course(courseID, numOfClasses);
@@ -140,6 +136,9 @@ void CoursesManager::RemoveCourse(int courseID){
 
 }
 
+void CoursesManager::AddClass(int courseID, int* classID){
+
+}
 
 // We delete the actual lecture!!!, create a new one and insret to new stc,
 // and update the course lectures array.
@@ -274,8 +273,7 @@ void CoursesManager::TimeViewed(int courseID, int classID, int *timeViewed){
 }
 
 
-void CoursesManager::GetMostViewedClasses(
-        int numOfClasses, int *courses, int *classes){
+void CoursesManager::GetIthWatchedClass(int i, int* courseID, int* classID){
 
 	int num_Of_Classes_left = timeTree_search(numOfClasses, courses, classes,
                                          this -> largest_time_tree);
@@ -285,60 +283,6 @@ void CoursesManager::GetMostViewedClasses(
 	if(num_Of_Classes_left > 0){
 	    throw std::invalid_argument("FAILURE");
 	}
-}
-
-int timeTree_search(
-        int numOfClasses, int *courses, int *classes, TimeTree* tt_ptr ){
-
-	if(tt_ptr == nullptr){
-		return numOfClasses;
-	}
-
-	int num_Of_Classes_left = stc_inorder(numOfClasses, courses, classes,
-                                          tt_ptr -> subtree_tree.root);
-
-	if(num_Of_Classes_left > 0){
-		return timeTree_search(num_Of_Classes_left,
-                         &(courses[numOfClasses - num_Of_Classes_left]),
-                         &(classes[numOfClasses - num_Of_Classes_left]),
-                         tt_ptr -> smaller);
-	}
-	else{
-		return 0;
-	}
-}
-
-int stc_inorder(int numOfClasses, int *courses, int *classes,
-                AVLNode<SubTreeCourse> *stc_node){
-
-	if(stc_node == nullptr){
-		return numOfClasses;
-	}
-
-	int num_Of_Classes_left =
-	        stc_inorder(numOfClasses,courses, classes, stc_node->left_son);
-
-	if(num_Of_Classes_left == 0){
-		return 0;
-	}
-	else{
-		num_Of_Classes_left =
-		        lectures_inorder(num_Of_Classes_left,
-                &courses[numOfClasses - num_Of_Classes_left],
-                &classes[numOfClasses - num_Of_Classes_left],
-                stc_node -> val_ptr -> lectures_tree -> root);
-	}
-	if(num_Of_Classes_left == 0) {
-        return 0;
-    }else{
-		num_Of_Classes_left =
-		        stc_inorder(num_Of_Classes_left,
-                &courses[numOfClasses - num_Of_Classes_left],
-                &classes[numOfClasses - num_Of_Classes_left],
-                stc_node->right_son);
-
-        return num_Of_Classes_left;
-    }
 }
 
 int lectures_inorder(int numOfClasses, int *courses, int *classes,
@@ -376,29 +320,40 @@ int lectures_inorder(int numOfClasses, int *courses, int *classes,
 }
 
 CoursesManager::CoursesManager(){
-    this -> smallest_time_tree = nullptr;
-    this -> largest_time_tree = nullptr;
-    this -> course_tree = new AVLTree<Course>;
+
+    try {
+        this -> course_cht = new CHT<Course>(true);
+    }
+    catch(std::bad_alloc&) {
+        throw std::invalid_argument("ALLOCATION_ERROR");
+    }
+
+    try {
+        this -> watch_lectures_avl = new AVLTree<Lecture>;
+    }
+    catch(std::bad_alloc&) {
+        delete this -> course_cht;
+        throw std::invalid_argument("ALLOCATION_ERROR");
+    }
+
+    try {
+        this -> non_watched_lectures_cht = new CHT<Lecture>(true);
+    }
+    catch(std::bad_alloc&) {
+        delete this -> course_cht;
+        delete this -> watch_lectures_avl;
+        throw std::invalid_argument("ALLOCATION_ERROR");
+    }
+
 }
 
 CoursesManager::~CoursesManager(){
 
-    // Go to each tree from smallest to largest and call delete each tree,so
-    // each tree destructor will be called.
-    TimeTree* current_tt_ptr = this -> smallest_time_tree;
-    TimeTree* next_tt_ptr;
-
-    while(current_tt_ptr != nullptr){
-        next_tt_ptr = current_tt_ptr -> bigger;
-        delete current_tt_ptr;
-        current_tt_ptr = next_tt_ptr;
-    }
-
-    // The course tree destructor will be called in the end of the time trees.
-    delete this -> course_tree;
+    delete this -> course_cht;
+    delete this -> watch_lectures_avl;
+    delete this -> non_watched_lectures_cht;
 
 }
-
 
 Course::~Course(){
 
@@ -408,102 +363,71 @@ Course::~Course(){
 
 }
 
-Course::Course(int course_id, int lectures_num){
+Course::Course(int course_id){
 
-    this->course_id = course_id;
-    this->lectures_num=lectures_num;
-    try {
-        this->lectures = new Lecture*[lectures_num];
-    }
-    catch(std::bad_alloc&) {
-        throw std::invalid_argument("ALLOCATION_ERROR");
-    }
-
-}
-
-Course::Course(const Course& c){
-
-    this->course_id = c.course_id;
-    this->lectures_num = c.lectures_num;
-    try {
-        this->lectures=new Lecture*[lectures_num];
-    }
-    catch(std::bad_alloc&) {
-        throw std::invalid_argument("ALLOCATION_ERROR");
-    }
-    for (int i = 0; i < c.lectures_num; ++i) {
-        this->lectures[i] = c.lectures[i];
-    }
-
-}
-
-Course& Course::operator=(const Course& c){
-    if (this == &c) {
-        return *this;
-    }
-    delete this->lectures;
-    this->course_id = c.course_id;
-    this->lectures_num = c.lectures_num;
-    try {
-        this->lectures = new Lecture*[c.lectures_num];
-    }
-    catch(std::bad_alloc&) {
-        throw std::invalid_argument("ALLOCATION_ERROR");
-    }
-    for (int i = 0; i < c.lectures_num; ++i) {
-        this->lectures[i] = c.lectures[i];
-    }
-    return *this;
-}
-
-SubTreeCourse::SubTreeCourse(){
-    this -> lectures_tree = new AVLTree<Lecture>;
-    this -> holder_time_tree = nullptr;
-    this -> course_id = -1;
-}
-
-SubTreeCourse::SubTreeCourse(int course_id, Lecture** lectures, int lectures_num, void*
-holder_time_tree){
-    this -> lectures_tree = new AVLTree<Lecture>(lectures, lectures_num);
-    this -> holder_time_tree = holder_time_tree;
     this -> course_id = course_id;
+    this -> lectures_num = 0;
+    try {
+        this -> lectures_cht = new CHT<Course>(false);
+    }
+    catch(std::bad_alloc&) {
+        throw std::invalid_argument("ALLOCATION_ERROR");
+    }
+
 }
 
-SubTreeCourse::~SubTreeCourse(){
-    delete this -> lectures_tree;
-    this -> holder_time_tree = nullptr;
-}
-
-//SubTreeCourse::SubTreeCourse(const SubTreeCourse& stc){
-//    this->course_id=stc.course_id;
-//    this->holder_time_tree=stc.holder_time_tree;
-//    this->lectures_tree=stc.lectures_tree;
-//    this -> lectures_tree = new
-//}
+//Course::Course(const Course& c){
 //
-//SubTreeCourse& SubTreeCourse::operator=(const SubTreeCourse& stc){
-//    this->course_id=stc.course_id;
-//    this->holder_time_tree=stc.holder_time_tree;
-//    this->lectures_tree=stc.lectures_tree;
+//    this -> course_id = c.course_id;
+//    this -> lectures_num = c.lectures_num;
+//    try {
+//        this -> lectures_cht = new CHT<Course>(false);
+//    }
+//    catch(std::bad_alloc&) {
+//        throw std::invalid_argument("ALLOCATION_ERROR");
+//    }
+//    for (int i = 0; i < c.lectures_num; ++i) {
+//        this->lectures[i] = c.lectures[i];
+//    }
+//
+//}
+
+//Course& Course::operator=(const Course& c){
+//    if (this == &c) {
+//        return *this;
+//    }
+//    delete this->lectures;
+//    this->course_id = c.course_id;
+//    this->lectures_num = c.lectures_num;
+//    try {
+//        this->lectures = new Lecture*[c.lectures_num];
+//    }
+//    catch(std::bad_alloc&) {
+//        throw std::invalid_argument("ALLOCATION_ERROR");
+//    }
+//    for (int i = 0; i < c.lectures_num; ++i) {
+//        this->lectures[i] = c.lectures[i];
+//    }
 //    return *this;
 //}
 
-
-
-Lecture::Lecture(){
-    this->lecture_id=0;
-    this->watch_num=0;
-    this->holder_sub_tree_course = nullptr;
+Lecture::Lecture(int course_id, int lecture_id){
+    this -> lecture_id = lecture_id;
+    this -> course_id = course_id;
+    this -> watch_num = 0;
+//    this->holder_sub_tree_course = nullptr;
 }
 Lecture::Lecture(const Lecture& l){
     this->lecture_id=l.lecture_id;
+    this -> course_id = l.course_id;
     this->watch_num=l.watch_num;
-    this->holder_sub_tree_course=l.holder_sub_tree_course;
+//    this->holder_sub_tree_course=l.holder_sub_tree_course;
 }
 Lecture& Lecture::operator=(const Lecture& l){
     this->lecture_id=l.lecture_id;
+    this -> course_id = l.course_id;
     this->watch_num=l.watch_num;
-    this->holder_sub_tree_course=l.holder_sub_tree_course;
+//    this->holder_sub_tree_course=l.holder_sub_tree_course;
     return *this;
 }
 
@@ -527,28 +451,12 @@ bool operator>=(const Course& c1, const Course& c2){
     return !(c1 < c2);
 }
 
-bool operator<(const SubTreeCourse& c1, const SubTreeCourse& c2){
-    return c1.course_id < c2.course_id;
-}
-
-bool operator>(const SubTreeCourse& c1, const SubTreeCourse& c2){
-    return c2 < c1;
-}
-
-bool operator==(const SubTreeCourse& c1, const SubTreeCourse& c2){
-    return !(c2 < c1) && !(c1 < c2);
-}
-
-bool operator<=(const SubTreeCourse& c1, const SubTreeCourse& c2){
-    return !(c2 < c1);
-}
-
-bool operator>=(const SubTreeCourse& c1, const SubTreeCourse& c2){
-    return !(c1 < c2);
-}
-
-bool operator<(const Lecture& c1, const Lecture& c2){
-    return c1.lecture_id < c2.lecture_id;
+bool operator<(const Lecture& c1, const Lecture& c2) {
+    if (c1.course_id == c2.course_id) {
+        return c1.lecture_id < c2.lecture_id;
+    }else{
+        return c1.course_id < c2.course_id;
+    }
 }
 
 bool operator>(const Lecture& c1, const Lecture& c2){

@@ -9,7 +9,6 @@
 #define LOAD_FACTOR_INCREASE 0.75
 #define LOAD_FACTOR_DECREASE 0.25
 #define INCREASE_FACTOR 4
-#include "AVL.h"
 
 template<class Value>
 class LSValue{
