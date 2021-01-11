@@ -345,10 +345,14 @@ bool operator>=(const Course& c1, const Course& c2){
 }
 
 bool operator<(const Lecture& c1, const Lecture& c2) {
-    if (c1.course_id == c2.course_id) {
-        return c1.lecture_id < c2.lecture_id;
+    if(c1.time == c2.time){
+        if (c1.course_id == c2.course_id) {
+            return c1.lecture_id < c2.lecture_id;
+        } else {
+            return c1.course_id < c2.course_id;
+        }
     }else{
-        return c1.course_id < c2.course_id;
+        return c1.time < c2.time;
     }
 }
 
