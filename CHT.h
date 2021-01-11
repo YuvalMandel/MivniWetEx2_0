@@ -27,6 +27,8 @@ private:
     LSValue** ls_table;
     int table_size;
     int num_of_members;
+    LSValue* iterator_ls_val;
+    int iterator_array_index;
 
 public:
 
@@ -36,8 +38,11 @@ public:
     void insert(*Value val_ptr);
     *Value returnValuePtr(const Value& val);
     void deleteValuePtr(const Value& val);
-
     void changeTableSize(bool increase);
+
+    Value* iteratorBegin();
+    Value* iteratorNext();
+
 
 };
 
@@ -48,6 +53,8 @@ CHT::CHT(bool enable_members_delete){
     this -> ls_table = new LSValue*[INIT_TABLE_SIZE];
     this -> table_size = INIT_TABLE_SIZE;
     this -> num_of_members = 0;
+    this -> iterator_ls_val = nullptr;
+    this -> iterator_array_index = 0;
 
     for (int i = 0; i < this -> table_size; ++i) {
         trees_array[i] = nullptr;
@@ -215,6 +222,49 @@ void CHT::changeTableSize(bool increase){
 
 }
 
+Value* CHT::iteratorBegin(){
 
+    this -> iterator_array_index = 0;
+    this -> iterator_ls_val = nullptr;
+    while(this -> iterator_ls_val == nullptr &&
+    iterator_array_index < this -> table_size){
+        if(this->ls_table[this -> iterator_array_index] != nullptr){
+            this -> iterator_ls_val =
+                    this->ls_table[this -> iterator_array_index];
+        }else{
+            this -> iterator_array_index++;
+        }
+    }
+
+    if(this -> iterator_ls_val != nullptr){
+        return this -> iterator_ls_val -> val_ptr;
+    }else{
+        return nullptr;
+    }
+
+
+}
+
+Value* CHT::iteratorNext(){
+
+    LSValue<Value>* old_iterator = iterator_ls_val;
+    while(iterator_ls_val == old_iterator ||
+    iterator_ls_val == nullptr ||
+    iterator_array_index < this -> table_size){
+        if(iterator_ls_val == old_iterator){
+            iterator_ls_val = old_iterator -> next;
+        }else{
+            this -> iterator_array_index++;
+            iterator_ls_val = this->ls_table[this -> iterator_array_index];
+        }
+    }
+
+    if(this -> iterator_ls_val != nullptr){
+        return this -> iterator_ls_val -> val_ptr;
+    }else{
+        return nullptr;
+    }
+
+}
 
 #endif //MIVNIWETEX2_0_CHT_H
