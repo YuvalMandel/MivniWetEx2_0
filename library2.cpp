@@ -1,4 +1,4 @@
-#include"library.h"
+#include"library2.h"
 #include"CoursesManager.h"
 
 void *Init() {
