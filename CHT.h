@@ -24,56 +24,54 @@ class CHT{
 private:
 
     bool enable_members_delete;
-    LSValue** ls_table;
+    LSValue<Value>** ls_table;
     int table_size;
     int num_of_members;
-    LSValue* iterator_ls_val;
+    LSValue<Value>* iterator_ls_val;
     int iterator_array_index;
 
 public:
 
-    CHT(bool enable_members_delete);
+    explicit CHT(bool enable_members_delete);
     ~CHT();
 
-    void insert(*Value val_ptr);
-    *Value returnValuePtr(const Value& val);
+    void insert(Value* val_ptr);
+    Value* returnValuePtr(const Value& val);
     void deleteValuePtr(const Value& val);
     void changeTableSize(bool increase);
 
     Value* iteratorBegin();
     Value* iteratorNext();
-
-
 };
 
 template<class Value>
-CHT::CHT(bool enable_members_delete){
+CHT<Value>::CHT(bool enable_members_delete){
 
     this -> enable_members_delete = enable_members_delete;
-    this -> ls_table = new LSValue*[INIT_TABLE_SIZE];
+    this -> ls_table = new LSValue<Value>*[INIT_TABLE_SIZE];
     this -> table_size = INIT_TABLE_SIZE;
     this -> num_of_members = 0;
     this -> iterator_ls_val = nullptr;
     this -> iterator_array_index = 0;
 
     for (int i = 0; i < this -> table_size; ++i) {
-        trees_array[i] = nullptr;
+        ls_table[i] = nullptr;
     }
 
 }
 
 template<class Value>
-CHT::~CHT(){
+CHT<Value>::~CHT(){
 
     for (int i = 0; i < table_size; ++i) {
 
-        LSValue* current_ls_val = this -> ls_table[i];
+        LSValue<Value>* current_ls_val = this -> ls_table[i];
 
         while(current_ls_val != nullptr){
             if(enable_members_delete){
                 delete current_ls_val -> val_ptr;
             }
-            LSValue* temp = current_ls_val;
+            LSValue<Value>* temp = current_ls_val;
             current_ls_val = current_ls_val -> next;
             delete temp;
         }
@@ -85,11 +83,11 @@ CHT::~CHT(){
 }
 
 template<class Value>
-void CHT::insert(*Value val_ptr){
+void CHT<Value>::insert(Value* val_ptr){
 
     int calc_index = (val_ptr -> calc_key()) % this -> table_size;
 
-    LSValue* new_ls_val = new LSValue;
+    LSValue<Value>* new_ls_val = new LSValue<Value>;
     new_ls_val -> val_ptr = val_ptr;
 
     if(this -> trees_array[calc_index] == nullptr){
@@ -97,15 +95,15 @@ void CHT::insert(*Value val_ptr){
         new_ls_val -> prev = nullptr;
         new_ls_val -> next = nullptr;
     } else{
-        LSValue* current_val = this -> trees_array[calc_index];
+        LSValue<Value>* current_val = this -> trees_array[calc_index];
         while(current_val -> next != nullptr){
-            if(*(current -> val_ptr) == *(val_ptr)){
+            if(*(current_val -> val_ptr) == *(val_ptr)){
                 delete new_ls_val;
                 throw std::invalid_argument("ALREADY_EXISTS");
             }
             current_val = current_val -> next;
         }
-        if(*(current -> val_ptr) == *(val_ptr)){
+        if(*(current_val -> val_ptr) == *(val_ptr)){
             delete new_ls_val;
             throw std::invalid_argument("ALREADY_EXISTS");
         }
@@ -121,36 +119,39 @@ void CHT::insert(*Value val_ptr){
 
 }
 
-*Value CHT::returnValuePtr(const Value& val){
+template<class Value>
+Value* CHT<Value>::returnValuePtr(const Value& val){
 
-    int calc_index = (val_ptr -> calc_key()) % this -> table_size;
+    int calc_index = (val.calc_key()) % this -> table_size;
 
     if(this -> trees_array[calc_index] == nullptr){
         throw std::invalid_argument("NOT_EXISTS");
     } else{
-        LSValue* current_val = this -> trees_array[calc_index];
+        LSValue<Value>* current_val = this -> trees_array[calc_index];
         while(current_val -> next != nullptr){
-            if(*(current -> val_ptr) == val){
-                return current -> val_ptr;
+            if(*(current_val -> val_ptr) == val){
+                return current_val -> val_ptr;
             }
             current_val = current_val -> next;
         }
-        if(*(current -> val_ptr) == val){
-            return current -> val_ptr;
+        if(*(current_val -> val_ptr) == val){
+            return current_val -> val_ptr;
         }
         throw std::invalid_argument("NOT_EXISTS");
     }
 
 }
 
-void CHT::deleteValuePtr(const Value& val){
+template<class Value>
+void CHT<Value>::deleteValuePtr(const Value& val){
 
-    int calc_index = (val_ptr -> calc_key()) % this -> table_size;
+    int calc_index = (val.calc_key()) % this -> table_size;
+    bool deleted_val = false;
 
     if(this -> trees_array[calc_index] == nullptr){
         throw std::invalid_argument("NOT_EXISTS");
     } else{
-        LSValue* current_val = this -> trees_array[calc_index];
+        LSValue<Value>* current_val = this -> trees_array[calc_index];
         while(current_val -> next != nullptr){
             if(*(current_val -> val_ptr) == val){
                 current_val -> next -> prev = current_val  -> prev;
@@ -161,6 +162,7 @@ void CHT::deleteValuePtr(const Value& val){
                     delete current_val -> val_ptr;
                 }
                 delete current_val;
+                deleted_val = true;
                 break;
             }
             current_val = current_val -> next;
@@ -175,9 +177,11 @@ void CHT::deleteValuePtr(const Value& val){
                 delete current_val -> val_ptr;
             }
             delete current_val;
-            break;
+            deleted_val = true;
         }
-        throw std::invalid_argument("NOT_EXISTS");
+        if(!deleted_val) {
+            throw std::invalid_argument("NOT_EXISTS");
+        }
     }
 
     this -> num_of_members -= 1;
@@ -186,19 +190,20 @@ void CHT::deleteValuePtr(const Value& val){
     }
 }
 
-void CHT::changeTableSize(bool increase){
+template<class Value>
+void CHT<Value>::changeTableSize(bool increase){
 
     if(increase || ((this -> table_size/INCREASE_FACTOR) > INIT_TABLE_SIZE)) {
 
         int old_size = this->table_size;
-        LSValue **old_ls_table = this->ls_table;
+        LSValue<Value>**old_ls_table = this->ls_table;
 
-        if (increae) {
+        if (increase) {
             this->table_size = old_size * INCREASE_FACTOR;
-            this->ls_table = new LSValue *[this->table_size];
+            this->ls_table = new LSValue<Value>*[this->table_size];
         } else {
             this->table_size = old_size / INCREASE_FACTOR;
-            this->ls_table = new LSValue *[this->table_size];
+            this->ls_table = new LSValue<Value>*[this->table_size];
         }
 
         for (int i = 0; i < this->table_size; ++i) {
@@ -207,10 +212,10 @@ void CHT::changeTableSize(bool increase){
 
         for (int i = 0; i < old_size; ++i) {
             if (old_ls_table[i] != nullptr) {
-                LSValue *current_val = old_ls_table[i];
+                LSValue<Value>*current_val = old_ls_table[i];
                 while (current_val != nullptr) {
                     this->insert(current_val->val_ptr);
-                    LSValue *temp = current_val;
+                    LSValue<Value>*temp = current_val;
                     current_val = current_val->next;
                     delete temp;
                 }
@@ -222,7 +227,8 @@ void CHT::changeTableSize(bool increase){
 
 }
 
-Value* CHT::iteratorBegin(){
+template<class Value>
+Value* CHT<Value>::iteratorBegin(){
 
     this -> iterator_array_index = 0;
     this -> iterator_ls_val = nullptr;
@@ -245,7 +251,8 @@ Value* CHT::iteratorBegin(){
 
 }
 
-Value* CHT::iteratorNext(){
+template<class Value>
+Value* CHT<Value>::iteratorNext(){
 
     LSValue<Value>* old_iterator = iterator_ls_val;
     while(iterator_ls_val == old_iterator ||
