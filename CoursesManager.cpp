@@ -56,10 +56,14 @@ void CoursesManager::AddClass(int courseID, int* classID){
 
     Course temp(courseID);
 
-    Course* c_ptr = this -> course_cht -> returnValuePtr(temp);
+    Course* c_ptr;
 
-    if(c_ptr == nullptr){
-        throw std::invalid_argument("FAILURE");
+    try{
+        c_ptr = this -> course_cht -> returnValuePtr(temp);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "NOT_EXISTS"){
+            throw std::invalid_argument("FAILURE");
+        }
     }
 
     *classID = c_ptr -> lectures_num;
