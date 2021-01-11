@@ -12,7 +12,7 @@
 
 template<class Value>
 class LSValue{
-private:
+public:
     Value* val_ptr;
     LSValue* prev;
     LSValue* next;
@@ -90,12 +90,12 @@ void CHT<Value>::insert(Value* val_ptr){
     LSValue<Value>* new_ls_val = new LSValue<Value>;
     new_ls_val -> val_ptr = val_ptr;
 
-    if(this -> trees_array[calc_index] == nullptr){
-        this -> trees_array[calc_index] = new_ls_val;
+    if(this -> ls_table[calc_index] == nullptr){
+        this -> ls_table[calc_index] = new_ls_val;
         new_ls_val -> prev = nullptr;
         new_ls_val -> next = nullptr;
     } else{
-        LSValue<Value>* current_val = this -> trees_array[calc_index];
+        LSValue<Value>* current_val = this -> ls_table[calc_index];
         while(current_val -> next != nullptr){
             if(*(current_val -> val_ptr) == *(val_ptr)){
                 delete new_ls_val;
@@ -124,10 +124,10 @@ Value* CHT<Value>::returnValuePtr(const Value& val){
 
     int calc_index = (val.calc_key()) % this -> table_size;
 
-    if(this -> trees_array[calc_index] == nullptr){
+    if(this -> ls_table[calc_index] == nullptr){
         throw std::invalid_argument("NOT_EXISTS");
     } else{
-        LSValue<Value>* current_val = this -> trees_array[calc_index];
+        LSValue<Value>* current_val = this -> ls_table[calc_index];
         while(current_val -> next != nullptr){
             if(*(current_val -> val_ptr) == val){
                 return current_val -> val_ptr;
@@ -148,10 +148,10 @@ void CHT<Value>::deleteValuePtr(const Value& val){
     int calc_index = (val.calc_key()) % this -> table_size;
     bool deleted_val = false;
 
-    if(this -> trees_array[calc_index] == nullptr){
+    if(this -> ls_table[calc_index] == nullptr){
         throw std::invalid_argument("NOT_EXISTS");
     } else{
-        LSValue<Value>* current_val = this -> trees_array[calc_index];
+        LSValue<Value>* current_val = this -> ls_table[calc_index];
         while(current_val -> next != nullptr){
             if(*(current_val -> val_ptr) == val){
                 current_val -> next -> prev = current_val  -> prev;
@@ -171,7 +171,7 @@ void CHT<Value>::deleteValuePtr(const Value& val){
             if(current_val -> prev != nullptr){
                 current_val -> prev -> next = current_val -> next;
             }else{
-                this -> trees_array[calc_index] = current_val -> next;
+                this -> ls_table[calc_index] = current_val -> next;
             }
             if(this -> enable_members_delete){
                 delete current_val -> val_ptr;

@@ -6,8 +6,10 @@
 
 void CoursesManager::AddCourse(int courseID) {
 
+    Course* c_ptr = nullptr;
+
     try {
-        Course* c_ptr = new Course(courseID);
+        c_ptr = new Course(courseID);
     }
     catch(std::bad_alloc&) {
         throw std::invalid_argument("ALLOCATION_ERROR");
@@ -149,7 +151,8 @@ void CoursesManager::GetIthWatchedClass(int i, int* courseID, int* classID){
 
 	int index = num_of_watched_classes - i + 1;
 
-	Lecture* l_ptr = this -> watch_lectures_avl -> FindValueByIndex(index);
+	Lecture* l_ptr =
+	        (this -> watch_lectures_avl -> FindValueByIndex(index)) -> val_ptr;
 
 	*courseID = l_ptr -> course_id;
     *classID = l_ptr -> lecture_id;
@@ -228,8 +231,8 @@ CoursesManager::~CoursesManager(){
 
 Course::~Course(){
 
-    if(this -> lectures != nullptr) {
-        delete[] this -> lectures;
+    if(this -> lectures_cht != nullptr) {
+        delete this -> lectures_cht;
     }
 
 }
@@ -239,12 +242,16 @@ Course::Course(int course_id){
     this -> course_id = course_id;
     this -> lectures_num = 0;
     try {
-        this -> lectures_cht = new CHT<Course>(false);
+        this -> lectures_cht = new CHT<Lecture>(false);
     }
     catch(std::bad_alloc&) {
         throw std::invalid_argument("ALLOCATION_ERROR");
     }
 
+}
+
+unsigned long long Course::calc_key() const{
+    return this -> course_id;
 }
 
 //Course::Course(const Course& c){
@@ -285,21 +292,32 @@ Course::Course(int course_id){
 Lecture::Lecture(int course_id, int lecture_id){
     this -> lecture_id = lecture_id;
     this -> course_id = course_id;
-    this -> watch_num = 0;
+    this -> time = 0;
 //    this->holder_sub_tree_course = nullptr;
 }
 Lecture::Lecture(const Lecture& l){
     this->lecture_id=l.lecture_id;
     this -> course_id = l.course_id;
-    this->watch_num=l.watch_num;
+    this->time=l.time;
 //    this->holder_sub_tree_course=l.holder_sub_tree_course;
 }
 Lecture& Lecture::operator=(const Lecture& l){
     this->lecture_id=l.lecture_id;
     this -> course_id = l.course_id;
-    this->watch_num=l.watch_num;
+    this->time=l.time;
 //    this->holder_sub_tree_course=l.holder_sub_tree_course;
     return *this;
+}
+
+unsigned long long Lecture::calc_key() const{
+
+    unsigned long long result = (this -> course_id);
+
+    result  = result << 32;
+
+    result += this -> lecture_id;
+
+    return result;
 }
 
 bool operator<(const Course& c1, const Course& c2){

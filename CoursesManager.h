@@ -16,15 +16,15 @@ public:
 
     int lecture_id;
     int course_id;
-    int watch_num;
+    int time;
 //    void* holder_sub_tree_course;
 
-    Lecture();
+    Lecture(int course_id, int lecture_id);
     ~Lecture() = default;
     Lecture(const Lecture& l);
     Lecture& operator=(const Lecture& l);
 
-    int calc_key();
+    unsigned long long calc_key()  const;
 
     friend bool operator<(const Lecture& c1, const Lecture& c2);
     friend bool operator>(const Lecture& c1, const Lecture& c2);
@@ -38,13 +38,13 @@ class Course{
 
 public:
 
-    Course(int course_id, int lectures_num);
+    Course(int course_id);
     ~Course();
     Course(const Course& c);
     Course& operator=(const Course& c);
     int lectures_num;
     int course_id;
-    int calc_key();
+    unsigned long long calc_key() const;
 
     CHT<Lecture>* lectures_cht;
 
