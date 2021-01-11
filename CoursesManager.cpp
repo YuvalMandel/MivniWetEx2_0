@@ -28,240 +28,167 @@ void CoursesManager::AddCourse(int courseID) {
 
 void CoursesManager::RemoveCourse(int courseID){
 
-	Course temp(courseID, 1);
+	Course temp(courseID);
 
-	AVLNode<Course> *course_node = this-> course_tree -> FindValue(temp);
+	Course* c_ptr = this -> course_cht -> returnValuePtr(temp);
 
-    if(course_node == nullptr){
+    if(c_ptr == nullptr){
         throw std::invalid_argument("FAILURE");
     }
 
-	Course* c_ptr = course_node -> val_ptr;
+    Lecture* l_ptr = c_ptr -> lectures_cht -> iteratorBegin();
 
-	for(int i=0; i < c_ptr -> lectures_num; i++){
+    while(l_ptr != nullptr){
+        if(l_ptr -> time == 0){
+            this -> non_watched_lectures_cht -> deleteValuePtr(*(l_ptr));
+        }else{
+            this -> watch_lectures_avl -> Remove(*(l_ptr));
+        }
+    }
 
-		SubTreeCourse* stc_ptr =
-		        (SubTreeCourse*)(c_ptr-> lectures[i] -> holder_sub_tree_course);
-
-		stc_ptr -> lectures_tree -> Remove(*(c_ptr -> lectures[i])); // Do we
-		// actually delete lecture.
-
-		// If stc is empty, remove it from the time tree.
-		if(stc_ptr->lectures_tree -> root == nullptr){
-
-			TimeTree* tt_ptr = (TimeTree*)stc_ptr -> holder_time_tree;
-
-			tt_ptr -> subtree_tree.Remove(*stc_ptr); // Actually deletes.
-
-			if(tt_ptr->subtree_tree.root == nullptr){
-
-				if(tt_ptr -> bigger != nullptr){
-                    tt_ptr -> bigger -> smaller = tt_ptr -> smaller;
-				} else{
-					this -> largest_time_tree = tt_ptr -> smaller;
-				}
-
-				if(tt_ptr -> smaller != nullptr){
-                    tt_ptr -> smaller -> bigger = tt_ptr -> bigger;
-				} else{
-					this -> smallest_time_tree = tt_ptr -> bigger;
-				}
-
-				delete tt_ptr;
-			
-			}
-		}
-
-	}
-
-
-	this -> course_tree -> Remove(*c_ptr); // Deletes course, but not the values
-	// in the course array.
+	this -> course_cht -> deleteValuePtr(*c_ptr);
 
 }
 
 void CoursesManager::AddClass(int courseID, int* classID){
 
-}
+    Course temp(courseID);
 
-// We delete the actual lecture!!!, create a new one and insret to new stc,
-// and update the course lectures array.
-void CoursesManager::WatchClass(int courseID, int classID, int time){
-	
-	Course temp(courseID, 1);
+    Course* c_ptr = this -> course_cht -> returnValuePtr(temp);
 
-	AVLNode<Course> *course_node = this-> course_tree -> FindValue(temp);
-
-    if(course_node == nullptr){
+    if(c_ptr == nullptr){
         throw std::invalid_argument("FAILURE");
     }
 
-    if(course_node ->val_ptr -> lectures_num < classID + 1){
+    *classID = c_ptr -> lectures_num;
+
+    Lecture* l_ptr = new Lecture(courseID, *classID);
+
+    c_ptr -> lectures_num++;
+
+    c_ptr -> lectures_cht -> insert(l_ptr);
+
+    this -> non_watched_lectures_cht -> insert(l_ptr);
+
+}
+
+void CoursesManager::WatchClass(int courseID, int classID, int time){
+
+    Course c_temp(courseID);
+
+    Course* c_ptr = this -> course_cht -> returnValuePtr(c_temp);
+
+    if(c_ptr == nullptr){
+        throw std::invalid_argument("FAILURE");
+    }
+
+    if(c_ptr -> lectures_num < classID + 1){
         throw std::invalid_argument("INVALID_INPUT");
     }
 
-	Lecture* original_lecture_ptr = (course_node -> val_ptr) -> lectures[classID];
+    Lecture l_temp(courseID, classID);
 
-	Lecture* new_lecture_ptr =  new Lecture(*original_lecture_ptr);
+    Lecture* l_ptr = c_ptr -> lectures_cht -> returnValuePtr(l_temp);
 
-	SubTreeCourse* original_stc_ptr = (SubTreeCourse*)original_lecture_ptr -> holder_sub_tree_course;
+    if(l_ptr == nullptr){
+        throw std::invalid_argument("FAILURE");
+    }
 
-	original_stc_ptr -> lectures_tree -> Remove(*original_lecture_ptr); //TODO
+    // Prepare new lecture.
+    Lecture* new_l_ptr = new Lecture(*l_ptr);
+    new_l_ptr -> time += time;
 
-	TimeTree* original_tt_ptr = (TimeTree*)original_stc_ptr -> holder_time_tree;
+    // Remove old.
+    c_ptr -> lectures_cht -> deleteValuePtr(*l_ptr);
+    if(l_ptr -> time == 0){
+        this -> non_watched_lectures_cht -> deleteValuePtr(*(l_ptr));
+    }else{
+        this -> watch_lectures_avl -> Remove(*(l_ptr));
+    }
 
-	TimeTree* current_tt_ptr = original_tt_ptr;
-
-    new_lecture_ptr -> watch_num = original_tt_ptr -> time_watched + time;
-
-	while(current_tt_ptr -> bigger != nullptr){
-	    if(current_tt_ptr -> bigger -> time_watched >
-	        original_tt_ptr -> time_watched + time){
-	        break;
-	    }
-        current_tt_ptr = current_tt_ptr -> bigger;
-	}
-
-	if(current_tt_ptr -> time_watched == original_tt_ptr -> time_watched + time){
-
-		AVLNode<SubTreeCourse>* current_stc_node = current_tt_ptr -> subtree_tree.FindValue(*original_stc_ptr);
-
-		if (current_stc_node){
-            new_lecture_ptr -> holder_sub_tree_course =
-			        current_stc_node -> val_ptr;
-            (course_node -> val_ptr) -> lectures[classID] = new_lecture_ptr;
-            current_stc_node -> val_ptr -> lectures_tree -> Insert(new_lecture_ptr);
-		}else{
-			SubTreeCourse* new_stc_ptr = new SubTreeCourse;
-            new_stc_ptr -> holder_time_tree = current_tt_ptr;
-            new_stc_ptr -> course_id = courseID;
-            new_lecture_ptr -> holder_sub_tree_course = new_stc_ptr;
-            (course_node -> val_ptr) -> lectures[classID] = new_lecture_ptr;
-            new_stc_ptr -> lectures_tree -> Insert(new_lecture_ptr);
-            current_tt_ptr -> subtree_tree.Insert(new_stc_ptr);
-		}
-	}else{
-
-        TimeTree* new_tt_ptr;
-
-        try {
-            new_tt_ptr = new TimeTree;
-        }
-        catch(std::bad_alloc&)
-        {
-            throw std::invalid_argument("ALLOCATION_ERROR");
-        }
-
-        new_tt_ptr -> time_watched = new_lecture_ptr -> watch_num;
-        new_tt_ptr -> smaller = current_tt_ptr;
-        new_tt_ptr -> bigger = current_tt_ptr -> bigger;
-        current_tt_ptr -> bigger = new_tt_ptr;
-		if(new_tt_ptr -> bigger != nullptr){
-            new_tt_ptr -> bigger -> smaller = new_tt_ptr;
-		}else{
-		    this -> largest_time_tree = new_tt_ptr;
-		}
-
-		SubTreeCourse* new_stc_ptr = new SubTreeCourse;
-        new_stc_ptr -> holder_time_tree = new_tt_ptr;
-        new_stc_ptr -> course_id = courseID;
-        new_lecture_ptr -> holder_sub_tree_course = new_stc_ptr;
-        (course_node -> val_ptr) -> lectures[classID] = new_lecture_ptr;
-        new_stc_ptr -> lectures_tree -> Insert(new_lecture_ptr);
-        new_tt_ptr -> subtree_tree.Insert(new_stc_ptr);
-	}
-	
-	// If original stc is empty, remove it from the time tree.
-	if(original_stc_ptr->lectures_tree -> root == nullptr){
-
-		TimeTree* tt_ptr = (TimeTree*)original_stc_ptr -> holder_time_tree;
-		tt_ptr -> subtree_tree.Remove(*original_stc_ptr);
-
-		if(tt_ptr -> subtree_tree.root == nullptr){
-
-			if(tt_ptr -> bigger != nullptr){
-                tt_ptr -> bigger -> smaller = tt_ptr -> smaller;
-			} else{
-				this -> largest_time_tree = tt_ptr -> smaller;
-			}
-
-			if(tt_ptr -> smaller != nullptr){
-                tt_ptr -> smaller -> bigger = tt_ptr -> bigger;
-			} else{
-				this -> smallest_time_tree = tt_ptr -> bigger;
-			}
-
-			delete tt_ptr;
-		
-		}
-	}
+    // Insert new.
+    c_ptr -> lectures_cht -> insert(new_l_ptr);
+    this -> watch_lectures_avl -> Insert(new_l_ptr);
 
 }
 
 
 void CoursesManager::TimeViewed(int courseID, int classID, int *timeViewed){
-	Course temp(courseID, 1);
+    Course c_temp(courseID);
 
-	AVLNode<Course> *course_node = this-> course_tree -> FindValue(temp);
+    Course* c_ptr = this -> course_cht -> returnValuePtr(c_temp);
 
-    if(course_node == nullptr){
+    if(c_ptr == nullptr){
         throw std::invalid_argument("FAILURE");
     }
 
-    if(course_node -> val_ptr -> lectures_num < classID + 1){
+    if(c_ptr -> lectures_num < classID + 1){
         throw std::invalid_argument("INVALID_INPUT");
     }
 
-	Lecture *lecture_ptr = (course_node -> val_ptr) -> lectures[classID];
-	*timeViewed = lecture_ptr -> watch_num;
+    Lecture l_temp(courseID, classID);
+
+    Lecture* l_ptr = c_ptr -> lectures_cht -> returnValuePtr(l_temp);
+
+    if(l_ptr == nullptr){
+        throw std::invalid_argument("FAILURE");
+    }
+
+    *timeViewed = l_ptr -> time;
+
 }
 
 
 void CoursesManager::GetIthWatchedClass(int i, int* courseID, int* classID){
 
-	int num_Of_Classes_left = timeTree_search(numOfClasses, courses, classes,
-                                         this -> largest_time_tree);
+    int num_of_watched_classes = (this -> watch_lectures_avl -> root -> rank);
 
+    if(num_of_watched_classes < i){
+        throw std::invalid_argument("FAILURE");
+    }
 
+	int index = num_of_watched_classes - i + 1;
 
-	if(num_Of_Classes_left > 0){
-	    throw std::invalid_argument("FAILURE");
-	}
+	Lecture* l_ptr = this -> watch_lectures_avl -> FindValueByIndex(index);
+
+	*courseID = l_ptr -> course_id;
+    *classID = l_ptr -> lecture_id;
+
 }
 
-int lectures_inorder(int numOfClasses, int *courses, int *classes,
-                     AVLNode<Lecture> *lecture_node){
-
-	if(lecture_node == nullptr){
-		return numOfClasses;
-	}
-
-	int num_Of_Classes_left = lectures_inorder(numOfClasses, courses,
-                                            classes, lecture_node->left_son);
-	
-	if(num_Of_Classes_left == 0) {
-        return 0;
-    }else{
-		classes[numOfClasses - num_Of_Classes_left] =
-		        lecture_node-> val_ptr -> lecture_id;
-		SubTreeCourse* temp_stc_ptr =
-		        (SubTreeCourse*)lecture_node-> val_ptr ->
-		        holder_sub_tree_course;
-		courses[numOfClasses - num_Of_Classes_left] =
-		        temp_stc_ptr -> course_id;
-		num_Of_Classes_left -= 1;
-	}
-	if(num_Of_Classes_left == 0) {
-        return 0;
-    }else{
-		num_Of_Classes_left = lectures_inorder(num_Of_Classes_left,
-               &courses[numOfClasses - num_Of_Classes_left],
-               &classes[numOfClasses - num_Of_Classes_left],
-               lecture_node -> right_son);
-
-        return num_Of_Classes_left;
-	}
-}
+//int lectures_inorder(int numOfClasses, int *courses, int *classes,
+//                     AVLNode<Lecture> *lecture_node){
+//
+//	if(lecture_node == nullptr){
+//		return numOfClasses;
+//	}
+//
+//	int num_Of_Classes_left = lectures_inorder(numOfClasses, courses,
+//                                            classes, lecture_node->left_son);
+//
+//	if(num_Of_Classes_left == 0) {
+//        return 0;
+//    }else{
+//		classes[numOfClasses - num_Of_Classes_left] =
+//		        lecture_node-> val_ptr -> lecture_id;
+//		SubTreeCourse* temp_stc_ptr =
+//		        (SubTreeCourse*)lecture_node-> val_ptr ->
+//		        holder_sub_tree_course;
+//		courses[numOfClasses - num_Of_Classes_left] =
+//		        temp_stc_ptr -> course_id;
+//		num_Of_Classes_left -= 1;
+//	}
+//	if(num_Of_Classes_left == 0) {
+//        return 0;
+//    }else{
+//		num_Of_Classes_left = lectures_inorder(num_Of_Classes_left,
+//               &courses[numOfClasses - num_Of_Classes_left],
+//               &classes[numOfClasses - num_Of_Classes_left],
+//               lecture_node -> right_son);
+//
+//        return num_Of_Classes_left;
+//	}
+//}
 
 CoursesManager::CoursesManager(){
 
