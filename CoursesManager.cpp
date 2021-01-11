@@ -4,80 +4,24 @@
 #include "CoursesManager.h"
 
 
-void CoursesManager::AddCourse (int courseID, int numOfClasses) {
+void CoursesManager::AddCourse(int courseID) {
 
-    Course* c_ptr = new Course(courseID, numOfClasses);
-
-    if(this -> course_tree -> FindValue(*c_ptr) != nullptr){
-        delete c_ptr;
-        throw std::invalid_argument("FAILURE");
+    try {
+        Course* c_ptr = new Course(courseID);
+    }
+    catch(std::bad_alloc&) {
+        throw std::invalid_argument("ALLOCATION_ERROR");
     }
 
-    // Go one by one and create lectures by id.
-    for (int i = 0; i < numOfClasses; ++i) {
-
-        Lecture* l = new Lecture;
-
-        l -> lecture_id = i;
-        l -> watch_num = 0;
-        l -> holder_sub_tree_course = nullptr;
-
-        // Give pointer to course lectures in the right place.
-        c_ptr -> lectures[i] = l;
-
+    // When insert already exists, delete c_ptr and throw.
+    try{
+        this -> course_cht -> insert(c_ptr);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "ALREADY_EXISTS"){
+            delete c_ptr;
+            throw std::invalid_argument("FAILURE");
+        }
     }
-
-    TimeTree* tt_ptr;
-
-    // If smallest time is not 0, create it.
-    if(this -> smallest_time_tree == nullptr){
-
-        // create time tree 0
-        try {
-            tt_ptr = new TimeTree;
-        }
-        catch(std::bad_alloc&)
-        {
-            throw std::invalid_argument("ALLOCATION_ERROR");
-        }
-
-        tt_ptr -> time_watched = 0;
-        tt_ptr -> bigger = nullptr;
-        tt_ptr -> smaller = nullptr;
-        this -> smallest_time_tree = tt_ptr;
-        this -> largest_time_tree = tt_ptr;
-    } else if(this -> smallest_time_tree -> time_watched > 0){
-
-        // create time tree 0.
-        try {
-            tt_ptr = new TimeTree;
-        }
-        catch(std::bad_alloc&)
-        {
-            throw std::invalid_argument("ALLOCATION_ERROR");
-        }
-
-        tt_ptr -> time_watched = 0;
-        tt_ptr -> bigger = this -> smallest_time_tree;
-        tt_ptr -> bigger -> smaller = tt_ptr;
-        tt_ptr -> smaller = nullptr;
-        this -> smallest_time_tree = tt_ptr;
-    }
-
-    // Create subtree course from course lectures and insert
-    SubTreeCourse* stc_ptr = new SubTreeCourse(courseID,
-                                               c_ptr -> lectures,
-                                               numOfClasses,
-                                               (void*)this -> smallest_time_tree);
-
-    for (int i = 0; i < numOfClasses; ++i) {
-        c_ptr -> lectures[i]->holder_sub_tree_course = stc_ptr;
-    }
-
-    // Add stc to tt.
-    this -> smallest_time_tree -> subtree_tree.Insert(stc_ptr);
-
-    this -> course_tree -> Insert(c_ptr);
 
 }
 

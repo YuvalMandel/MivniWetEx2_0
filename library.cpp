@@ -8,7 +8,7 @@ void *Init() {
     return (void*)DS;
 
 }
-StatusType AddCourse(void *DS, int courseID, int numOfClasses) {
+StatusType AddCourse(void* DS, int courseID){
 
     if(DS == nullptr || courseID <= 0 || numOfClasses <= 0) return INVALID_INPUT;
 
@@ -27,6 +27,22 @@ StatusType AddCourse(void *DS, int courseID, int numOfClasses) {
 StatusType RemoveCourse(void *DS, int courseID) {
 
     if(DS == nullptr || courseID <= 0) return INVALID_INPUT;
+
+    try{
+        CoursesManager* CM = (CoursesManager*)DS;
+        CM -> RemoveCourse(courseID);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "ALLOCATION_ERROR") return ALLOCATION_ERROR;
+        if(std::string(e.what()) == "INVALID_INPUT") return INVALID_INPUT;
+        if(std::string(e.what()) == "FAILURE") return FAILURE;
+    }
+    return SUCCESS;
+}
+
+StatusType AddClass(void* DS, int courseID, int* classID){
+
+    if(DS == nullptr || courseID <= 0 || classID == nullptr) return
+    INVALID_INPUT;
 
     try{
         CoursesManager* CM = (CoursesManager*)DS;
@@ -67,9 +83,8 @@ StatusType TimeViewed(void *DS, int courseID, int classID, int *timeViewed){
     return SUCCESS;
 }
 
-StatusType GetMostViewedClasses(void *DS, int numOfClasses, int *courses, int
-*classes){
-    if(DS == nullptr || numOfClasses <= 0 || courses == nullptr || classes ==
+StatusType GetIthWatchedClass(void* DS, int i, int* courseID, int* classID){
+    if(DS == nullptr || numOfClasses <= 0 || courseID == nullptr || classID ==
     nullptr)
         return INVALID_INPUT;
     try{

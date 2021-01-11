@@ -74,7 +74,7 @@ public:
     CoursesManager();
     ~CoursesManager();
 
-    void AddCourse (int courseID, int numOfClasses);
+    void AddCourse (int courseID);
 
     void RemoveCourse(int courseID);
 
