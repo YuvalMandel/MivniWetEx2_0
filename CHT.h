@@ -263,7 +263,9 @@ Value* CHT<Value>::iteratorNext(){
             iterator_ls_val = old_iterator -> next;
         }else{
             this -> iterator_array_index++;
-            iterator_ls_val = this->ls_table[this -> iterator_array_index];
+            if(iterator_array_index < this -> table_size) {
+                iterator_ls_val = this->ls_table[this->iterator_array_index];
+            }
         }
     }
 
