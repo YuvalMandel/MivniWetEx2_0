@@ -112,10 +112,14 @@ void CoursesManager::WatchClass(int courseID, int classID, int time){
 
     Lecture l_temp(courseID, classID);
 
-    Lecture* l_ptr = c_ptr -> lectures_cht -> returnValuePtr(l_temp);
+    Lecture* l_ptr;
 
-    if(l_ptr == nullptr){
-        throw std::invalid_argument("FAILURE");
+    try{
+        l_ptr = c_ptr -> lectures_cht -> returnValuePtr(l_temp);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "NOT_EXISTS"){
+            throw std::invalid_argument("FAILURE");
+        }
     }
 
     // Prepare new lecture.
@@ -156,10 +160,14 @@ void CoursesManager::TimeViewed(int courseID, int classID, int *timeViewed){
 
     Lecture l_temp(courseID, classID);
 
-    Lecture* l_ptr = c_ptr -> lectures_cht -> returnValuePtr(l_temp);
+    Lecture* l_ptr;
 
-    if(l_ptr == nullptr){
-        throw std::invalid_argument("FAILURE");
+    try{
+        l_ptr = c_ptr -> lectures_cht -> returnValuePtr(l_temp);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "NOT_EXISTS"){
+            throw std::invalid_argument("FAILURE");
+        }
     }
 
     *timeViewed = l_ptr -> time;
@@ -168,6 +176,10 @@ void CoursesManager::TimeViewed(int courseID, int classID, int *timeViewed){
 
 
 void CoursesManager::GetIthWatchedClass(int i, int* courseID, int* classID){
+
+    if(this -> watch_lectures_avl -> root == nullptr){
+        throw std::invalid_argument("FAILURE");
+    }
 
     int num_of_watched_classes = (this -> watch_lectures_avl -> root -> rank);
 
@@ -179,6 +191,10 @@ void CoursesManager::GetIthWatchedClass(int i, int* courseID, int* classID){
 
 	Lecture* l_ptr =
 	        (this -> watch_lectures_avl -> FindValueByIndex(index)) -> val_ptr;
+
+	if(l_ptr == nullptr){
+        throw std::invalid_argument("FAILURE");
+	}
 
 	*courseID = l_ptr -> course_id;
     *classID = l_ptr -> lecture_id;
