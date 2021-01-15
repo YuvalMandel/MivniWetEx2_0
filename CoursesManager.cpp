@@ -96,10 +96,14 @@ void CoursesManager::WatchClass(int courseID, int classID, int time){
 
     Course c_temp(courseID);
 
-    Course* c_ptr = this -> course_cht -> returnValuePtr(c_temp);
+    Course* c_ptr;
 
-    if(c_ptr == nullptr){
-        throw std::invalid_argument("FAILURE");
+    try{
+        c_ptr = this -> course_cht -> returnValuePtr(c_temp);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "NOT_EXISTS"){
+            throw std::invalid_argument("FAILURE");
+        }
     }
 
     if(c_ptr -> lectures_num < classID + 1){
@@ -136,10 +140,14 @@ void CoursesManager::WatchClass(int courseID, int classID, int time){
 void CoursesManager::TimeViewed(int courseID, int classID, int *timeViewed){
     Course c_temp(courseID);
 
-    Course* c_ptr = this -> course_cht -> returnValuePtr(c_temp);
+    Course* c_ptr;
 
-    if(c_ptr == nullptr){
-        throw std::invalid_argument("FAILURE");
+    try{
+        c_ptr = this -> course_cht -> returnValuePtr(c_temp);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "NOT_EXISTS"){
+            throw std::invalid_argument("FAILURE");
+        }
     }
 
     if(c_ptr -> lectures_num < classID + 1){
