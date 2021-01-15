@@ -125,7 +125,7 @@ bool measureRuntime(int num_courses, int classes_per_course, int time_per_class,
             ASSERT_TEST(AddClassAUX(DS,course_IDs[i],j) == SUCCESS);
         }
     }
-    // Fill the system so that all of the classes have time viewed.
+    // Fill the system so ttbhhat all of the classes have time viewed.
     for(int i = 0; i < num_courses; i++){
         for(int j = 0; j < classes_per_course; j++){
             ASSERT_TEST(WatchClass(DS,course_IDs[i],j,time_per_class) == SUCCESS);
@@ -221,7 +221,7 @@ bool testTimeComplexity(){
     int max_power = 5;
     int number_of_classes_per_course = 10;
     int time_per_class = 10;
-    int repetitions = 100;
+    int repetitions = 1; //100;
     // Run the test on different output sizes in logarithmic scale.
     std::vector<long long> result;
     for(int i = 1; i <= max_power; i++){
