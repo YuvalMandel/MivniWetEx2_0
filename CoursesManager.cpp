@@ -361,7 +361,8 @@ bool operator>(const Lecture& c1, const Lecture& c2){
 }
 
 bool operator==(const Lecture& c1, const Lecture& c2){
-    return !(c2 < c1) && !(c1 < c2);
+//    return !(c2 < c1) && !(c1 < c2);
+    return (c1.course_id == c2.course_id) && (c1.lecture_id == c2.lecture_id);
 }
 
 bool operator<=(const Lecture& c1, const Lecture& c2){

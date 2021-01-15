@@ -1,0 +1,5 @@
+Init
+AddCourse 1
+AddClass 1
+WatchClass 1 0 10
+TimeViewed 1 0
