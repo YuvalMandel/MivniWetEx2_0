@@ -32,15 +32,9 @@ void CoursesManager::RemoveCourse(int courseID){
 
     int temp_int;
 
-    if(courseID == 315){
-        temp_int = 0;
-    }else{
-        temp_int = 0;
-    }
-
     Course temp(courseID+temp_int);
 
-	Course* c_ptr;
+	Course* c_ptr = nullptr;
 
     try{
         c_ptr = this -> course_cht -> returnValuePtr(temp);
