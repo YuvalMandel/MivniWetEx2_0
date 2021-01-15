@@ -85,6 +85,10 @@ CHT<Value>::~CHT(){
 template<class Value>
 void CHT<Value>::insert(Value* val_ptr){
 
+    if(val_ptr == nullptr){
+        throw std::invalid_argument("ERROR");
+    }
+
     int calc_index = (val_ptr -> calc_key()) % this -> table_size;
 
     LSValue<Value>* new_ls_val = new LSValue<Value>;

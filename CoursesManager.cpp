@@ -285,7 +285,7 @@ Course::Course(int course_id){
 }
 
 unsigned long long Course::calc_key() const{
-    return this -> course_id;
+    return (long long)(this -> course_id);
 }
 
 //Course::Course(const Course& c){
