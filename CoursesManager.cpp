@@ -30,7 +30,15 @@ void CoursesManager::AddCourse(int courseID) {
 
 void CoursesManager::RemoveCourse(int courseID){
 
-	Course temp(courseID);
+    int temp_int;
+
+    if(courseID == 315){
+        temp_int = 0;
+    }else{
+        temp_int = 0;
+    }
+
+    Course temp(courseID+temp_int);
 
 	Course* c_ptr = this -> course_cht -> returnValuePtr(temp);
 

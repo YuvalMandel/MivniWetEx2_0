@@ -113,7 +113,7 @@ void CHT<Value>::insert(Value* val_ptr){
     }
 
     this -> num_of_members += 1;
-    if(((this -> num_of_members)/(this -> table_size)) > LOAD_FACTOR_INCREASE){
+    if(((float)(this -> num_of_members)/(float)(this -> table_size)) > LOAD_FACTOR_INCREASE){
         this -> changeTableSize(true);
     }
 
@@ -185,7 +185,8 @@ void CHT<Value>::deleteValuePtr(const Value& val){
     }
 
     this -> num_of_members -= 1;
-    if(((this -> num_of_members)/(this -> table_size)) < LOAD_FACTOR_DECREASE){
+    if(((float)(this -> num_of_members)/(float)(this -> table_size)) <
+    LOAD_FACTOR_DECREASE){
         this -> changeTableSize(false);
     }
 }
@@ -255,8 +256,8 @@ template<class Value>
 Value* CHT<Value>::iteratorNext(){
 
     LSValue<Value>* old_iterator = iterator_ls_val;
-    while(iterator_ls_val == old_iterator ||
-    iterator_ls_val == nullptr ||
+    while((iterator_ls_val == old_iterator ||
+    iterator_ls_val == nullptr) &&
     iterator_array_index < this -> table_size){
         if(iterator_ls_val == old_iterator){
             iterator_ls_val = old_iterator -> next;
