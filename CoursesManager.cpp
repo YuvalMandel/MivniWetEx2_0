@@ -30,9 +30,7 @@ void CoursesManager::AddCourse(int courseID) {
 
 void CoursesManager::RemoveCourse(int courseID){
 
-    int temp_int;
-
-    Course temp(courseID+temp_int);
+    Course temp(courseID);
 
 	Course* c_ptr = nullptr;
 
