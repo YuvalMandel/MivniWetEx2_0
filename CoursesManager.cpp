@@ -46,6 +46,7 @@ void CoursesManager::RemoveCourse(int courseID){
         }else{
             this -> watch_lectures_avl -> Remove(*(l_ptr));
         }
+        l_ptr = c_ptr -> lectures_cht -> iteratorNext();
     }
 
 	this -> course_cht -> deleteValuePtr(*c_ptr);

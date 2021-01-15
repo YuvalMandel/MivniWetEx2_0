@@ -266,7 +266,8 @@ Value* CHT<Value>::iteratorNext(){
         }
     }
 
-    if(this -> iterator_ls_val != nullptr){
+    if((this -> iterator_ls_val != nullptr) &&
+    (iterator_array_index < this -> table_size)){
         return this -> iterator_ls_val -> val_ptr;
     }else{
         return nullptr;
