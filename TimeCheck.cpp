@@ -281,7 +281,7 @@ bool run_test(std::function<bool()> test, std::string test_name){
     return true;
 }
 
-int main3(){
+int main(){
 
     std::map<std::string, std::function<bool()>> tests;
 

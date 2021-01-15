@@ -3,4 +3,4 @@ project(MivniWetEx2_0)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(MivniWetEx2_0 main2.cpp library2.cpp CoursesManager.cpp)
+add_executable(MivniWetEx2_0 TimeCheck.cpp library2.cpp CoursesManager.cpp)
