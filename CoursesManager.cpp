@@ -40,10 +40,15 @@ void CoursesManager::RemoveCourse(int courseID){
 
     Course temp(courseID+temp_int);
 
-	Course* c_ptr = this -> course_cht -> returnValuePtr(temp);
+	Course* c_ptr;
 
-    if(c_ptr == nullptr){
-        throw std::invalid_argument("FAILURE");
+    try{
+        c_ptr = this -> course_cht -> returnValuePtr(temp);
+    }catch(std::exception& e) {
+        if(std::string(e.what()) == "NOT_EXISTS"){
+            delete c_ptr;
+            throw std::invalid_argument("FAILURE");
+        }
     }
 
     Lecture* l_ptr = c_ptr -> lectures_cht -> iteratorBegin();
