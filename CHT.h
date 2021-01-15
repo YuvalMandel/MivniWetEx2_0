@@ -157,6 +157,8 @@ void CHT<Value>::deleteValuePtr(const Value& val){
                 current_val -> next -> prev = current_val  -> prev;
                 if(current_val -> prev != nullptr){
                     current_val -> prev -> next = current_val -> next;
+                } else {
+                    this->ls_table[calc_index] = current_val->next;
                 }
                 if(this -> enable_members_delete){
                     delete current_val -> val_ptr;
@@ -167,17 +169,19 @@ void CHT<Value>::deleteValuePtr(const Value& val){
             }
             current_val = current_val -> next;
         }
-        if(*(current_val -> val_ptr) == val){
-            if(current_val -> prev != nullptr){
-                current_val -> prev -> next = current_val -> next;
-            }else{
-                this -> ls_table[calc_index] = current_val -> next;
+        if(!deleted_val) {
+            if (*(current_val->val_ptr) == val) {
+                if (current_val->prev != nullptr) {
+                    current_val->prev->next = current_val->next;
+                } else {
+                    this->ls_table[calc_index] = current_val->next;
+                }
+                if (this->enable_members_delete) {
+                    delete current_val->val_ptr;
+                }
+                delete current_val;
+                deleted_val = true;
             }
-            if(this -> enable_members_delete){
-                delete current_val -> val_ptr;
-            }
-            delete current_val;
-            deleted_val = true;
         }
         if(!deleted_val) {
             throw std::invalid_argument("NOT_EXISTS");
