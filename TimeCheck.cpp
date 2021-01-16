@@ -221,7 +221,7 @@ bool testTimeComplexity(){
     int max_power = 5;
     int number_of_classes_per_course = 10;
     int time_per_class = 10;
-    int repetitions = 1; //100;
+    int repetitions = 100; //100;
     // Run the test on different output sizes in logarithmic scale.
     std::vector<long long> result;
     for(int i = 1; i <= max_power; i++){
